@@ -1,0 +1,5 @@
+export(PolychoricRM)
+useDynLib(Turbofuns, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+

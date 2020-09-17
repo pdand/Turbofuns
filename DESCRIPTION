@@ -1,0 +1,14 @@
+Package: Turbofuns
+Type: Package
+Title: Computing polychoric correlations and their asymptotic covariance matrix
+Version: 1.0
+Date: 2020-06-17
+Author: Guangjian Zhang, Lauren Trichtinger, Dayoung Lee
+Maintainer: Lauren Trichtinger <ltrichti@nd.edu>
+Description:This package computes the polychoric correlations 
+    and their asymptotic covariance matrix which can be used to estimate
+    models with ordinal variables.
+License: GPL (>= 2)
+Imports: Rcpp (>= 1.0.3)
+LinkingTo: Rcpp
+NeedsCompilation: yes
