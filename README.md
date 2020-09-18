@@ -8,7 +8,7 @@ This package can be installed directly from GitHub:
 
 install.packages("devtools")
 
-devtools::install_github("pdand/polyACM")
+devtools::install_github("pdand/Turbofuns")
 
 
 
