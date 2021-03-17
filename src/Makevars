@@ -7,5 +7,5 @@ SHLIB = Turbofuns$(SHLIB_EXT)
 
 all: $(SHLIB)
 
-$(SHLIB): $(OBJECTS)
+$(SHLIB): $(FT_OBJS) $(C_OBJS)
 	$(SHLIB_LINK) -o $ $(OBJECTS) $(ALL_LIBS);
