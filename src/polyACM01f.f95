@@ -1,4 +1,3 @@
-
 module MODNormal
 
     public:: bvn, PPND16, d2norm, phi
@@ -8,6 +7,51 @@ module MODNormal
    contains
 
     !------------------------------------------------------------------------
+! All the code (except the subroutine normp) in the module MODNormal is software obtained from
+! the website http://www.math.wsu.edu/faculty/genz/software/software.html.
+! Below please find the license information about Alan Genz's software.
+! In addition, these Fortran code are included in the R package mnormt. Its license is GPL-2 | GPL-3, which
+! is given at https://www.gnu.org/licenses/gpl-3.0.en.html
+
+! All Alan Millers' code has been released to the public domain. More details can be
+! found at https://jblevins.org/mirror/amiller/
+
+
+!    The software is based on work described in the paper
+!     "Numerical Computation of Rectangular Bivariate and Trivariate
+!      Normal and t Probabilities", by the code author:
+!
+!       Alan Genz
+!       Department of Mathematics
+!       Washington State University
+!       Pullman, WA 99164-3113
+!       Email : alangenz@wsu.edu
+!
+!
+! Copyright (C) 2013, Alan Genz,  All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided the following conditions are met:
+!   1. Redistributions of source code must retain the above copyright
+!      notice, this list of conditions and the following disclaimer.
+!   2. Redistributions in binary form must reproduce the above copyright
+!      notice, this list of conditions and the following disclaimer in
+!      the documentation and/or other materials provided with the
+!      distribution.
+!   3. The contributor name(s) may not be used to endorse or promote
+!      products derived from this software without specific prior
+!      written permission.
+! THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+! "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+! LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+! FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+! COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+! INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+! BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+! OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+! ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+! TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF USE
+! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 FUNCTION bvn ( lower, upper, infin, correl ) RESULT(fn_val)
 
@@ -232,11 +276,14 @@ SUBROUTINE normp(z, p, q, pdf)
 ! Latest revision of Fortran 77 version - 30 March 1986
 ! Latest revision of Fortran 90 version - 12 August 1997
 
-REAL*8, INTENT(IN)            :: z
-REAL*8, INTENT(OUT), OPTIONAL :: p, q, pdf
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+
+REAL(dp), INTENT(IN)            :: z
+REAL(dp), INTENT(OUT), OPTIONAL :: p, q, pdf
 
 ! Local variables
-REAL*8, PARAMETER :: p0 = 220.2068679123761D0, p1 = 221.2135961699311D0,  &
+REAL(dp), PARAMETER :: p0 = 220.2068679123761D0, p1 = 221.2135961699311D0,  &
                         p2 = 112.0792914978709D0, p3 = 33.91286607838300D0,  &
                         p4 = 6.373962203531650D0, p5 = .7003830644436881D0,  &
                         p6 = .3526249659989109D-01,  &
@@ -245,8 +292,8 @@ REAL*8, PARAMETER :: p0 = 220.2068679123761D0, p1 = 221.2135961699311D0,  &
                         q4 = 86.78073220294608D0, q5 = 16.06417757920695D0,  &
                         q6 = 1.755667163182642D0, q7 = .8838834764831844D-1, &
                         cutoff = 7.071D0, root2pi = 2.506628274631001D0
-REAL*8, PARAMETER  :: zero = 0.0D0, one = 1.0d0
-REAL*8            :: zabs, expntl, pp, qq, ppdf
+REAL(dp), PARAMETER  :: zero = 0.0D0, one = 1.0d0
+REAL(dp)            :: zabs, expntl, pp, qq, ppdf
 
 zabs = ABS(z)
 
@@ -299,8 +346,11 @@ END SUBROUTINE normp
 
 
 FUNCTION phi(z) RESULT(p)
-REAL*8, INTENT(IN) :: z
-REAL*8             :: p
+
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+REAL(dp), INTENT(IN) :: z
+REAL(dp)             :: p
 
 CALL normp(z, p)
 
@@ -434,10 +484,13 @@ END FUNCTION PPND16
 function d2norm(a,b,rho)
 ! function d2norm calculates the density of bivariate
 ! normal distribution
-REAL*8,INTENT(in)::a,b,rho
-REAL*8::d2norm
 
-REAL*8,PARAMETER::pi=3.141592653589793d0,pi_2=pi*2.0d0,two=2.0d0
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+REAL(dp),INTENT(in)::a,b,rho
+REAL(dp)::d2norm
+
+REAL(dp),PARAMETER::pi=3.141592653589793d0,pi_2=pi*2.0d0,two=2.0d0
 
 d2norm=dexp((a*a-two*a*b*rho+b*b)/(two*rho*rho-two))/(pi_2*dsqrt(1.0d0-rho*rho))
 
@@ -452,14 +505,27 @@ end module MODNormal
 !------------------------------------------------------------------------
 
 module MODpolyACM
-! Make sure to include the license information before release.
+
+! The Fortran code in the module MODpolyACM are programmed by Guangjian Zhang.
+! His contact information: 390 Corbett Family Hall, Notre Dame, IN 46556.
+! Email gzhang3@nd.edu and phone 574-631-3751.
+! The code is under the license GPL-2 | GPL-3, which
+! can be found at https://www.gnu.org/licenses/gpl-3.0.en.html
+! The R code computes polychoric correlations with the two stage method (Olsson, 1979) and the
+! asymptotic covariance matrix with an estimating equation method (Christoffersson & Gunsjo, 1996).
+! Some further details are also given in Joreskog (1994).
+! Christoffersson & Gunsjo (1996). A short note on the estimation of the asymptotic covariance matrix for
+! polychoric correlations. Psychometrika, 61, 173-175.
+! Joreskog (1994). On the estimation of polychoric correlations and their asymptotic covariance matrix. Psychometrika,
+! 59, 381-389.
+! Olsson (1979). Maximum likelihood estimation of the polychoric correlation coefficient. Psychometrika, 44, 443-460.
 
     implicit none
 
     PUBLIC:: SubEstimatePolyACM
 
     private ::cor_start, SUBPreprocessing,Threshold1D, Make1Contingency, Estimate1Correlation, &
-            SubMakeB, SubComputeACM, SubMakeGamma
+            SubComputeACM, SubMakeGamma
 
 contains
 
@@ -489,13 +555,13 @@ contains
     DO j = 1, nvar
     IMin = MINVAL(datamatrixIn(:,j))
     Category(j) = MAXVAL(datamatrixIn(:,j))  - IMin + 1
-    if (Category(j)==1) IError(j) = 1 ! zero variation
-    if (Category(j)> 9) IError(j) = 10 ! More than 10 categories
+    if (Category(j)==1) IError(j) = -1 ! zero variation
+    if (Category(j)> 9) IError(j) = -10 ! More than 10 categories
     DataMatrixOut(:,j) = DataMatrixIn(:,j) - IMin + 1
     END DO
 
 
-    if (any(IError>0)) then
+    if (any(IError /= 0)) then
     return
     END IF
 
@@ -540,12 +606,15 @@ contains
     use MODNormal, only: PPND16
     implicit none
 
+    INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+
     integer, dimension(:), intent(in) :: NCount
     integer, intent(in) :: Ncase, NCategory
-    real*8, dimension(0:10,2), intent(out) :: Threshold !(:,1): without a constant; (:,2) with a constant
+    real(dp), dimension(0:10,2), intent(out) :: Threshold !(:,1): without a constant; (:,2) with a constant
     integer, dimension(1:10,2), intent(out) :: Ierror
 
-    real*8:: xtemp, xtemp1d(NCategory)
+    real(dp):: xtemp, xtemp1d(NCategory)
     integer:: i
 
     xtemp = 0.0d0
@@ -602,19 +671,25 @@ subroutine Estimate1Correlation (Contingency, CategoryI, CategoryJ, IAdjust, Thr
             CellProbability, CellDerivative, Correlation, information,Ierror)
     use MODNormal, only: PPND16
 
+! more options of dealing with empty cells
+
+
     implicit none
+
+    INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
     Integer, dimension(:,:), intent(in) :: Contingency
     Integer, intent(in) :: CategoryI, CategoryJ, IAdjust
-    real*8, dimension(0:10,2), intent(in) :: ThresholdI2, ThresholdJ2
-    real*8, dimension(:,:), intent(out) :: xContingency, CellProbability, CellDerivative
-    real*8, dimension(2), intent(out) :: Correlation
-    real*8, intent(out) :: information
+    real(dp), dimension(0:10,2), intent(in) :: ThresholdI2, ThresholdJ2
+    real(dp), dimension(:,:), intent(out) :: xContingency, CellProbability, CellDerivative
+    real(dp), dimension(2), intent(out) :: Correlation
+    real(dp), intent(out) :: information
     integer, dimension(2), intent(out) :: Ierror
 
 
-    real*8 :: xTable(CategoryI,CategoryJ), ThresholdI(0:10), ThresholdJ(0:10)
-    real*8 :: PearsonCorrelation, fx, dfx, dfxold, xscore, xtemp, xcase
-    real*8 :: xtolerance = 1.0D-5
+    real(dp) :: xTable(CategoryI,CategoryJ), ThresholdI(0:10), ThresholdJ(0:10)
+    real(dp) :: PearsonCorrelation, fx, dfx, dfxold, xscore, xtemp, xcase
+    real(dp) :: xtolerance = 1.0D-5
 
     integer:: i
     integer :: NIteration = 20
@@ -657,11 +732,47 @@ if (any(Contingency(1:CategoryI,1:CategoryJ)==0)) then
 
     case (2)
 
+    xContingency(1:CategoryI,1:CategoryJ) = xContingency(1:CategoryI,1:CategoryJ) + 0.1d0
+    Ierror(1) = 1
+    xcase = xcase + dble(CategoryI * CategoryJ)* 0.1d0
+
+    call ComputeThresholdIJ
+
+    case (3)
+
     xContingency(1:CategoryI,1:CategoryJ) = xContingency(1:CategoryI,1:CategoryJ) + 0.5d0
     Ierror(1) = 1
     xcase = xcase + dble(CategoryI * CategoryJ)* 0.5d0
 
     call ComputeThresholdIJ
+
+    case (11)
+
+     where (Contingency(1:CategoryI,1:CategoryJ)==0) xContingency(1:CategoryI,1:CategoryJ) = 1.0d0 / dble(CategoryI * CategoryJ)
+
+    Ierror(1) = 1
+    xcase = xcase + dble(count(Contingency(1:CategoryI,1:CategoryJ)==0))* 1.0d0 / dble(CategoryI * CategoryJ)
+
+    call ComputeThresholdIJ
+
+    case (12)
+
+     where (Contingency(1:CategoryI,1:CategoryJ)==0) xContingency(1:CategoryI,1:CategoryJ) = 0.1d0
+
+    Ierror(1) = 1
+    xcase = xcase + dble(count(Contingency(1:CategoryI,1:CategoryJ)==0)) * 0.1d0
+
+    call ComputeThresholdIJ
+
+    case (13)
+
+     where (Contingency(1:CategoryI,1:CategoryJ)==0) xContingency(1:CategoryI,1:CategoryJ) = 0.5d0
+
+    Ierror(1) = 1
+    xcase = xcase + dble(count(Contingency(1:CategoryI,1:CategoryJ)==0)) * 0.5d0
+
+    call ComputeThresholdIJ
+
 
     case default
 
@@ -675,48 +786,6 @@ end if
     xTable = xContingency(1:CategoryI,1:CategoryJ)
     call cor_start(xTable,CategoryI, CategoryJ,PearsonCorrelation,Ierror(2))
 
-
-
-
- !   write (3, '(3i8, f15.4) ') CategoryI, CategoryJ, Ierror1, PearsonCorrelation
-
-
-
-
-!    call updateCorrelation(PearsonCorrelation,CategoryI, CategoryJ,ThresholdI, ThresholdJ, CellProbability, CellDerivative)
-
-
-!  write (unit=3,fmt='("xContingency = ")')
-!  do i = 1, CategoryI
-!    write (unit=3,fmt='(10E15.4)') (xContingency(i,j),j=1,CategoryJ)
-! end do
-
-
-! write (unit=3,fmt='("CellProbability = ")')
-! do i = 1, CategoryI
-!    write (unit=3,fmt='(10E15.4)') (CellProbability(i,j),j=1,CategoryJ)
-! end do
-
-! write (unit=3,fmt='("CellDerivative = ")')
-! do i = 1, CategoryI
-!    write (unit=3,fmt='(10E15.4)') (CellDerivative(i,j),j=1,CategoryJ)
-! end do
-
-! fx = SUM(xTable*dlog(CellProbability(1:CategoryI,1:CategoryJ)))/xcase
-! dfx = SUM(xTable / CellProbability(1:CategoryI,1:CategoryJ)*CellDerivative(1:CategoryI,1:CategoryJ))/xcase
-! xscore = -SUM( CellDerivative(1:CategoryI,1:CategoryJ)**2 / CellProbability(1:CategoryI,1:CategoryJ))
-
-! write (unit=3,fmt='("Correlation, fx, dfx, and xscore = ",4E15.4)') PearsonCorrelation, fx, dfx, xscore
-
-! xtemp = sign(5.0d-1 + abs(PearsonCorrelation)/2.0d0, PearsonCorrelation)
-
-! call updateCorrelation(xtemp,CategoryI, CategoryJ,ThresholdI, ThresholdJ, CellProbability, CellDerivative)
-
-! fx = SUM(xTable*dlog(CellProbability(1:CategoryI,1:CategoryJ)))/xcase
-! dfx = SUM(xTable / CellProbability(1:CategoryI,1:CategoryJ)*CellDerivative(1:CategoryI,1:CategoryJ))/xcase
-! xscore = -SUM( CellDerivative(1:CategoryI,1:CategoryJ)**2 / CellProbability(1:CategoryI,1:CategoryJ))
-
-! write (unit=3,fmt='("Correlation, fx, dfx, and xscore = ",4E15.4)') xtemp, fx, dfx, xscore
 
 xtemp = PearsonCorrelation
 dfxold = 1.0d0
@@ -742,14 +811,14 @@ end do
 
 Correlation(1) = PearsonCorrelation
 Correlation(2) = xtemp
-information = xscore
+information =  - xscore ! possible error? 2020-07-12
 Ierror(2) = i
 
 contains
 !-------------------------------
 subroutine ComputeThresholdIJ
     integer :: i,j,DummyError
-    real*8:: xtemp, xtemp1d(10)
+    real(dp):: xtemp, xtemp1d(10)
 
 
      ThresholdI(0) = -1.0d10
@@ -790,17 +859,21 @@ subroutine cor_start(xtable,CategoryI, CategoryJ,correlation,nerror)
 ! subroutine cor_start estimates correlations from contingcy tables
 ! Guangjian Zhang, 2004-10-10
 implicit none
-REAL*8,INTENT(in)::xtable(:,:)
+
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+
+REAL(dp),INTENT(in)::xtable(:,:)
 Integer, intent(in) :: CategoryI, CategoryJ
-REAL*8,INTENT(out)::correlation
+REAL(dp),INTENT(out)::correlation
 INTEGER,INTENT(out)::nerror
 ! No error                 -> nerror = 0
 ! either s.d.'s is zero    -> nerror = -10000
 ! correlation is -1        -> nerror = -20000
 ! correlation is +1        -> nerror = -30000
 
-REAL*8 ::xproduct(CategoryI, CategoryJ)
-REAL*8::xtotal,xtemp1,xtemp2,srow,ssrow,scolumn,sscolumn,sproduct
+REAL(dp) ::xproduct(CategoryI, CategoryJ)
+REAL(dp)::xtotal,xtemp1,xtemp2,srow,ssrow,scolumn,sscolumn,sproduct
 INTEGER::nr,nc
 INTEGER::i,j
 LOGICAL::Ltable(CategoryI, CategoryJ)
@@ -876,17 +949,19 @@ subroutine updateCorrelation(rho,nrow,ncolumn,Thresholdr, Thresholdc, probabilit
 ! Guangjian Zhang, 2004-10-08
 ! It updates probabilities and derivatives based on procedures described by OLSSON (1979)
 ! in the Psychometrika paper, vol 44, 443-460
-! USE polychoric_data
 use MODNormal, only: bvn, d2norm
 
 implicit none
 
-REAL*8,INTENT(in):: rho
-integer, intent(in):: nrow,ncolumn
-real*8, dimension(0:10), intent(in) :: Thresholdr, Thresholdc
-real*8, dimension(:,:), intent(out):: probabilities, derivatives
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
 
-REAL*8::xlow(2),xupper(2),temp(2,2)
+
+REAL(dp),INTENT(in):: rho
+integer, intent(in):: nrow,ncolumn
+real(dp), dimension(0:10), intent(in) :: Thresholdr, Thresholdc
+real(dp), dimension(:,:), intent(out):: probabilities, derivatives
+
+REAL(dp)::xlow(2),xupper(2),temp(2,2)
 INTEGER::inx(2)
 INTEGER::i,j
 
@@ -908,10 +983,6 @@ do j=1,ncolumn ! ncolumn is declared in polychoric_data
 
 
 
-   ! upate derivatives next
-   ! I will use -1.0d10 to denote negative infinity and 1.0d10 to denote postive infinity
-   ! It slows the program, if it is an issue, I will rewrite the program
-   ! It will cause the underflow, but it will gives me an zero
    temp(1,1)=d2norm(thresholdr(i-1),thresholdc(j-1),rho)
    temp(1,2)=d2norm(thresholdr(i-1),thresholdc(j),rho)
    temp(2,1)=d2norm(thresholdr(i),thresholdc(j-1),rho)
@@ -923,195 +994,36 @@ end do ! ncolumn
 
 end subroutine updateCorrelation
 
-!----------------------------------------------------------------
-
-subroutine SubMakeB (NCountJ, NCategoryJ, IAdjust, ThresholdJ, MBJ, Ierror)
-
-    implicit none
-
-    integer, dimension(:), intent(in) :: NCountJ
-    integer, intent(in) :: NCategoryJ, IAdjust
-    real*8, dimension(0:10), intent(in) :: ThresholdJ
-    real*8, dimension(:,:), intent(out) :: MBJ
-    integer, intent(out) :: Ierror
-
-
-    REAL*8,PARAMETER::rootpi2=sqrt(3.141592653589793d0*2.0d0)
-
-    real*8 :: xa(NCategoryJ-1), xb(NCategoryJ-2), xprobJ(NCategoryJ), density1norm(NCategoryJ-1), &
-              xinverse2d(NCategoryJ-1, NCategoryJ-1),  xcase, MBJT(NCategoryJ-1, NCategoryJ)
-    integer :: j !, i
-
-    Ierror = 0
-    MBJT = 0.0d0
-
-   density1norm = 0.0d0
-   density1norm = exp(- 0.5d0 * ThresholdJ(1:(NCategoryJ-1))**2 ) / rootpi2
-
-   xcase = 0.0d0
-   xprobJ = 0.0d0
-
-   xcase = dble (sum(NCountJ(1:NCategoryJ)))
-   xprobJ(1:NCategoryJ) = dble(NCountJ(1:NCategoryJ))
-
-   if (IAdjust /= 0) then
-    xcase = xcase + 1.0d0
-    xprobJ = xprobJ + 1.0d0 / dble(NCategoryJ)
-   end if
-
-   xprobJ = xprobJ / xcase
-
-   xa (1: (NCategoryJ -1 )) = ( 1.0d0 / xprobJ(1:(NCategoryJ-1)) + 1.0d0 / xprobJ(2 : NCategoryJ)) &
-       * density1norm (1: (NCategoryJ-1)) * density1norm (1: (NCategoryJ-1))
-
-   if (NCategoryJ == 2) then
-    MBJT(1,1:2) =  1.0d0 / xprobJ(1:2)
-    MBJT(1,1:2) = density1norm(1) * MBJ(1,1:2) / xa(1)
-    MBJT(1,2) = - MBJ(1,2)
-    MBJ(1:NCategoryJ, 1: NCategoryJ-1) = transpose(MBJT(1:NCategoryJ-1, 1: NCategoryJ))
-
-    return
-
-   end if ! (NCategoryJ == 2)
-
-    xb(1: (NCategoryJ - 2)) = - density1norm (1: (NCategoryJ-2)) * density1norm (2: (NCategoryJ-1)) &
-                              / xprobJ(2 : (NCategoryJ-1))
-
-    xinverse2d = 0.0d0
-
-    call InvSymTridiag(xa, xb, NCategoryJ - 1, xinverse2d, Ierror)
-
-    MBJT(:,1) = xinverse2d(:,1) * density1norm(1) / xprobJ(1)
-    MBJT(:,NCategoryJ) = - xinverse2d(:,NCategoryJ-1) * density1norm(NCategoryJ-1) / xprobJ(NCategoryJ)
-
-    do j = 2, NCategoryJ - 1
-    MBJT(:,j) = ( - xinverse2d(:, j - 1) * density1norm(j-1) + xinverse2d(:, j) * density1norm(j)) / xprobJ(j)
-    end do
-
-    MBJ(1:NCategoryJ, 1: NCategoryJ-1) = transpose(MBJT(1:NCategoryJ-1, 1: NCategoryJ))
-
-
-!    write (unit=3,fmt='("xa",10E15.4)') xa
-!    write (unit=3,fmt='("xb",10E15.4)') xb
-!    write (unit=3,fmt='(i8)') Ierror
-
-!    write (unit=3,fmt='("xinverse")')
-!    do i = 1, NCategoryJ - 1
-!    write (unit=3,fmt='(10E15.4)') xinverse2d (i,:)
-!    end do
-
- !   write (unit=3,fmt='("densit1norm")')
- !   write (unit=3,fmt='(10E15.4)') density1norm
-
- !   write (unit=3,fmt='("MBJ")')
- !   do i = 1, NCategoryJ - 1
- !   write (unit=3,fmt='(10E15.4)') MBJ (i,:)
- !   end do
-
-
-    contains
-
-    subroutine InvSymTridiag(xa, xb, n, xinverse, Ierror)
-        ! This is an internal subroutine
-        real*8, intent(in) :: xa(1:n), xb(1:n-1)
-        integer, intent(in) :: n
-        real*8, intent(out) :: xinverse(n,n)
-        integer, intent(out) :: Ierror
-
-        real*8 :: theta(0:n), phi(1:(n+1)), xtemp
-        integer:: i,j,k
-
-        xinverse = 0.0d0
-        Ierror = 0
-
-        theta= 0.0d0
-        phi = 0.0d0
-
-        theta(0) = 1.0d0
-        theta(1) = xa(1)
-
-        do i=2,n
-           theta(i) = xa(i) * theta(i-1) - xb(i-1) * xb(i-1) * theta(i-2)
-!           write (unit=3, fmt='(i8, 5f15.4)') i, theta(i-2:i), xa(i), xb(i-1)
-        end do
-
-        if (abs(theta(n))<1.0d-10) then ! The determinant of the symmetric tri-diagonal matrix is zero.
-            Ierror = 1
-            return
-        end if
-
-        phi(n+1) = 1.d0
-        phi(n) = xa(n)
-
-        do i = n-1, 1, -1
-            phi(i) = xa(i) * phi(i+1) - xb(i) * xb(i) * phi(i+2)
-        end do
-
-
-        do j = 1, n
-            do i = 1, j
-                 if (i == j) then
-                      xinverse(i,j) = theta(i-1) * phi(j+1)
-                    else
-
-                        xtemp = 1.0d0
-                      do k = i, j -1
-                        xtemp = xtemp * xb(k)
-                      end do ! k
-
-                    if (mod(i+j,2) == 0) then
-                          xinverse(i,j) = xtemp * theta(i-1) * phi(j+1)
-                        else
-                         xinverse(i,j) = - xtemp * theta(i-1) * phi(j+1)
-                    end if ! (mod(i+j,2) == 0)
-
-                       xinverse(j,i) = xinverse(i,j)
-
-                 end if ! (i == j)
-
-            end do ! i
-        end do ! j
-
-        xinverse = xinverse / theta(n)
-
-    end subroutine InvSymTridiag
-
-end subroutine SubMakeB
-
 !---------------------------------------------------------------
-subroutine SubMakeGamma(NCategoryI, NCategoryJ, IAdjust, IEmpty, ThresholdI, ThresholdJ, BMatrix0I, BMatrix0J, &
-            BMatrix1I, BMatrix1J, Probability, Derivative, Correlation, Information, GammaMatrix, Omega)
+subroutine SubMakeGamma(NCategoryI, NCategoryJ, ThresholdI, ThresholdJ, &
+            Probability, Contigency, Derivative, Correlation, Information, GammaMatrix, Omega)
 
 use MODNormal, only: phi
 
 implicit none
 
-integer, intent(in) :: NCategoryI, NCategoryJ, IAdjust, IEmpty
-real*8, dimension(0:10,2), intent(in) :: ThresholdI, ThresholdJ
-real*8, dimension(:,:), intent(in) :: BMatrix0I, BMatrix0J, BMatrix1I, BMatrix1J, Probability, Derivative
-real*8, intent(in) :: Correlation, Information
-real*8, dimension(:,:), intent(out) :: GammaMatrix
-real*8, intent(out) :: Omega
+INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
 
-real*8::  ThresholdI1D(0:10), ThresholdJ1D(0:10), BetaI(NCategoryI-1), BetaJ(NCategoryJ-1), &
+
+integer, intent(in) :: NCategoryI, NCategoryJ
+integer, dimension(:,:), intent(in) :: Contigency
+real(dp), dimension(0:10,2), intent(in) :: ThresholdI, ThresholdJ
+real(dp), dimension(:,:), intent(in) :: Probability, Derivative
+real(dp), intent(in) :: Correlation, Information
+real(dp), dimension(:,:), intent(out) :: GammaMatrix
+real(dp), intent(out) :: Omega
+
+REAL(dp),PARAMETER::rootpi2=sqrt(3.141592653589793d0*2.0d0)
+
+real(dp)::  ThresholdI1D(0:10), ThresholdJ1D(0:10), BetaI(NCategoryI-1), BetaJ(NCategoryJ-1), &
         AlphaMatrix(NCategoryI, NCategoryJ), xtempI1(NCategoryI), xtempJ1(NCategoryJ), &
-        BMatrixI(NCategoryI,NCategoryI-1), BMatrixJ(NCategoryJ,NCategoryJ-1)
+        DenThresholdI1D(0:10), DenThresholdJ1D(0:10), xContigency(NCategoryI, NCategoryJ)
 integer::i,j
 
-! step 1, choose proper thresholds according to whether a small constant is added
+! step 1, choose proper thresholds
 
-if ((IAdjust /=0) .and. (IEmpty /=0) ) then
-    ThresholdI1D(0:10) = ThresholdI(0:10,2)
-    ThresholdJ1D(0:10) = ThresholdJ(0:10,2)
-    BMatrixI(1:NCategoryI,1:NCategoryI-1) = BMatrix1I(NCategoryI,NCategoryI-1)
-    BMatrixJ(1:NCategoryJ,1:NCategoryJ-1) = BMatrix1J(NCategoryJ,NCategoryJ-1)
-    else
     ThresholdI1D(0:10) = ThresholdI(0:10,1)
     ThresholdJ1D(0:10) = ThresholdJ(0:10,1)
-    BMatrixI(1:NCategoryI,1:NCategoryI-1) = BMatrix0I(NCategoryI,NCategoryI-1)
-    BMatrixJ(1:NCategoryJ,1:NCategoryJ-1) = BMatrix0J(NCategoryJ,NCategoryJ-1)
-
-end if
 
 ! Step 2, Compute AlphaMatrix
 
@@ -1123,23 +1035,26 @@ AlphaMatrix(1:NCategoryI, 1:NCategoryJ) = Derivative(1:NCategoryI, 1:NCategoryJ)
    ! Step 3.2, compute BetaI
     call ComputeBeta (NCategoryJ, NCategoryI, ThresholdJ1D, ThresholdI1D, transpose(AlphaMatrix), BetaI)
 
-! write (unit=3, fmt='("BetaJ", 10E15.4)') BetaJ
-! write (unit=3, fmt='("BetaI", 10E15.4)') BetaI
-
 
    ! Step 4, Compute GammaMatrix and Omega
+   DenThresholdI1D = 0.0d0
+   DenThresholdJ1D = 0.0d0
+
+   DenThresholdI1D(1:(NCategoryI-1)) = exp(- 0.5d0 * ThresholdI1D(1:(NCategoryI-1))**2 ) / rootpi2
+   DenThresholdJ1D(1:(NCategoryJ-1)) = exp(- 0.5d0 * ThresholdJ1D(1:(NCategoryJ-1))**2 ) / rootpi2
+
    GammaMatrix = 0.0d0
    xtempI1 = 0.0d0
    xtempJ1 = 0.0d0
 
-
    do j =1, NCategoryI -1
-     xtempI1(1:NcategoryI) = xtempI1(1:NcategoryI) + BMatrixI(1:NcategoryI, j) * BetaI(j)
+     xtempI1(j) =  - sum(  BetaI(j:(NCategoryI - 1))/DenThresholdI1D(j:(NCategoryI - 1)))
    end do
 
    do j =1, NCategoryJ -1
-     xtempJ1(1:NcategoryJ) = xtempJ1(1:NcategoryJ) + BMatrixJ(1:NcategoryJ, j) * BetaJ(j)
+     xtempJ1(j) = - sum( BetaJ(j:(NCategoryJ - 1))/DenThresholdJ1D(j:(NCategoryJ - 1)))
    end do
+
 
 GammaMatrix(1:NCategoryI, 1:NCategoryJ) = AlphaMatrix(1:NCategoryI, 1:NCategoryJ)
 
@@ -1151,7 +1066,12 @@ end do
 
 GammaMatrix(1:NCategoryI, 1:NCategoryJ) = GammaMatrix(1:NCategoryI, 1:NCategoryJ) / Information
 
-Omega = sum(GammaMatrix(1:NCategoryI, 1:NCategoryJ) * Probability(1:NCategoryI, 1:NCategoryJ))
+ xContigency = 0.0d0
+ xContigency(1:NCategoryI, 1:NCategoryJ) = dble(Contigency(1:NCategoryI, 1:NCategoryJ))
+ xContigency(1:NCategoryI, 1:NCategoryJ) = xContigency(1:NCategoryI, 1:NCategoryJ) / sum(xContigency(1:NCategoryI, 1:NCategoryJ))
+
+ Omega = sum(GammaMatrix(1:NCategoryI, 1:NCategoryJ) * xContigency(1:NCategoryI, 1:NCategoryJ))
+
 
 return
 
@@ -1160,21 +1080,21 @@ contains
 subroutine ComputeBeta (nrow, ncolumn, ThresholdRow, ThresholdColumn, Alpha, BetaColumn)
 ! It is an internal subroutine to compute BetaJ (and BetaI). Operations are done mostly column-wise.
 integer, intent(in):: nrow, ncolumn
-real*8, dimension(0:10), intent(in) :: ThresholdRow, ThresholdColumn
-real*8, dimension(:,:), intent(in) :: Alpha
-real*8, dimension(:), intent(out) :: BetaColumn
+real(dp), dimension(0:10), intent(in) :: ThresholdRow, ThresholdColumn
+real(dp), dimension(:,:), intent(in) :: Alpha
+real(dp), dimension(:), intent(out) :: BetaColumn
 
 
-REAL*8,PARAMETER::rootpi2=sqrt(3.141592653589793d0*2.0d0)
+REAL(dp),PARAMETER::rootpi2=sqrt(3.141592653589793d0*2.0d0)
 
 
 integer :: i, j
-real*8 :: DerivativePhi2Tau(0:nrow, ncolumn-1), DensitycColumn(ncolumn-1), xtemp2D(nrow, ncolumn-1)
-real*8 :: root1mrhosquare
+real(dp) :: DerivativePhi2Tau(0:nrow, ncolumn-1), DensitycColumn(ncolumn-1), xtemp2D(nrow, ncolumn-1)
+real(dp) :: root1mrhosquare
 
 ! Step 1, Compute the derivative of Phi_2 WRT Tau_j
 
-root1mrhosquare = sqrt(1-correlation*correlation)
+root1mrhosquare = sqrt(1.0d0-correlation*correlation) ! typo? 2020-07-12
 
 DerivativePhi2Tau = 0.0d0
 DensitycColumn = 0.0d0
@@ -1190,14 +1110,14 @@ end do
 ! Step 2, Compute BetaColumn
 
 xtemp2D = 0.0d0
-xtemp2D(1:nrow,1:ncolumn-1) = (DerivativePhi2Tau(1:nrow,1:ncolumn-1) - DerivativePhi2Tau(0:nrow-1,1:ncolumn-1)) &
+
+ xtemp2D(1:nrow,1:ncolumn-1) = (DerivativePhi2Tau(1:nrow,1:ncolumn-1) - DerivativePhi2Tau(0:nrow-1,1:ncolumn-1)) &
   * (Alpha(1:nrow,1:ncolumn-1)-Alpha(1:nrow,2:ncolumn))
+
+
 
 BetaColumn(1:ncolumn-1) = sum(xtemp2D,dim=1)
 
-! do i=1,nrow
-!    write (unit=3, fmt='(10E15.4)') xtemp2D(i,:)
-! end do
 
 
 end subroutine ComputeBeta
@@ -1207,11 +1127,15 @@ end subroutine SubMakeGamma
 
 subroutine SubComputeACM(Ncase, DataI, DataJ, DataK, DataL, GammaIJ, GammaKL, OmegaIJ, OmegaKL, acmIJ)
     implicit none
+
+    INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+
     integer, intent(in) :: Ncase
     integer, dimension(Ncase), intent(in) :: DataI, DataJ, DataK, DataL
-    real*8, dimension(:,:), intent(in) :: GammaIJ, GammaKL
-    real*8, intent(in) :: OmegaIJ, OmegaKL
-    real*8, intent(out) :: acmIJ
+    real(dp), dimension(:,:), intent(in) :: GammaIJ, GammaKL
+    real(dp), intent(in) :: OmegaIJ, OmegaKL
+    real(dp), intent(out) :: acmIJ
 
     integer :: i
 
@@ -1220,7 +1144,7 @@ subroutine SubComputeACM(Ncase, DataI, DataJ, DataK, DataL, GammaIJ, GammaKL, Om
     do i = 1, Ncase
         acmIJ = acmIJ + GammaIJ(DataI(i),DataJ(i)) * GammaKL(DataK(i),DataL(i))
     end do
-        acmIJ = acmIJ / dble(Ncase) + OmegaIJ * OmegaKL
+      acmIJ = acmIJ / dble(Ncase) - OmegaIJ * OmegaKL
 
 end subroutine SubComputeACM
 !-----------------------------------------------------------------------------------------
@@ -1232,30 +1156,34 @@ subroutine SubEstimatePolyACM (Ncase, nvar, IAdjustIn, NCore, DataIn, ThresholdO
 
     implicit none
 
+    INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
+
+
     integer, intent(in) :: Ncase, nvar, IAdjustIn, NCore
     integer, dimension(Ncase, nvar),intent(in):: DataIn
-    real*8, dimension(0:10,nvar), intent(out) :: ThresholdOut
-    real*8, dimension(nvar*(nvar-1)/2), intent(out) :: PolyR
+    real(dp), dimension(0:10,nvar), intent(out) :: ThresholdOut
+    real(dp), dimension(nvar*(nvar-1)/2), intent(out) :: PolyR
     integer, dimension(2,nvar*(nvar-1)/2), intent(out) :: IError
-    real*8, dimension((nvar*(nvar-1))*(nvar*(nvar-1)+2)/8), intent(out), optional :: ACM1D
+    real(dp), dimension((nvar*(nvar-1))*(nvar*(nvar-1)+2)/8), intent(out), optional :: ACM1D
 
 
-    real*8, allocatable:: Total_Threshold(:,:,:), Total_xContingency(:,:,:), Total_CellProbability(:,:,:), &
-                        Total_CellDerivative(:,:,:), Total_Correlation(:,:), Total_MB_NA(:,:,:), &
-                        Total_MB_A(:,:,:), Total_Gamma(:,:,:),Total_information(:), Total_Omega(:),&
+    real(dp), allocatable:: Total_Threshold(:,:,:), Total_xContingency(:,:,:), Total_CellProbability(:,:,:), &
+                        Total_CellDerivative(:,:,:), Total_Correlation(:,:), &
+                        Total_Gamma(:,:,:),Total_information(:), Total_Omega(:),&
                         CorrelationT (:,:)
 
     integer, allocatable :: Total_Table (:,:,:), Table_Temp(:,:), DataMatrixIn(:,:), DataMatrixOut(:,:), &
                             Category(:), T_Ncount(:,:), IJ_Index(:,:), Total_Error(:), IJKL_index(:,:), &
                             IError1d(:)
-    integer ::  IerrorTh(10,2),nmaxc, mthread, IAdjustDummy, Ierror1, NCoreDummy
+    integer ::  IerrorTh(10,2),nmaxc, IAdjustDummy, NCoreDummy
     integer:: i,j,ij,kl, ijkl
 
     ! Step 0, take care of local variables
-     mthread = omp_get_max_threads()
+    ! mthread = omp_get_max_threads()
 
      if (NCore < 1) then
-          NCoreDummy = mthread - 1
+         ! NCoreDummy = mthread - 1
+         NCoreDummy = 2
         else
          NCoreDummy = NCore
      end if
@@ -1274,12 +1202,22 @@ allocate (DataMatrixIn(ncase,nvar), DataMatrixOut(ncase,nvar), Category(nvar), I
 
     call SUBPreprocessing (nvar,DataMatrixIn,DataMatrixOut,Category,T_NCount,IError1d)
 
+    if (any(IError1d /= 0)) then
+       Ierror(1,1:nvar) = IError1d(1:nvar)
+       ThresholdOut = 0.0d0
+       PolyR = 0.0d0
+       return
+    end if
+
 
     ! Step 2, Univariate Compute threshold estimates in two situations (IAdjust=0 or IAdjust=1)
+
+ !  !$omp parallel do
 
      do j = 1, nvar
        call Threshold1D(T_NCount(:,j), NCase, Category(j), Total_Threshold(0:10,1:2, j), IerrorTh)
      end do
+! !$omp end parallel do
 
 
     ! Step 3, Bivariate case
@@ -1302,12 +1240,15 @@ end do
 
          ! Step 3.1 Make contingency tables
 
+ ! !$omp parallel do
+
 
 do ij = 1, nvar*(nvar-1)/2
     call Make1Contingency(DataMatrixOut(:,IJ_Index(1,ij)),DataMatrixOut(:,IJ_Index(2,ij)),Table_Temp)
     Total_Table(:,:,ij) = Table_Temp
 end do
 
+! !$omp end parallel do
 
 
          ! Step 3.2 Estimate polychoric correlations
@@ -1366,24 +1307,7 @@ IAdjustDummy = IAdjustIn
 
     ! Step 4, Compute ACM
 
-
-         ! Step 4.1, Compute B matrices
-
-         allocate (Total_MB_NA(nmaxc,nmaxc-1,nvar),Total_MB_A(nmaxc,nmaxc-1,nvar))
-IAdjustDummy = 0
-
-do j = 1, nvar
-  call SubMakeB (T_NCount(:,j), Category(j), IAdjustDummy, Total_Threshold(0:10,1,j), Total_MB_NA(:,:,j), Ierror1)
-end do
-
-IAdjustDummy = 1
-
-do j = 1, nvar
-  call SubMakeB (T_NCount(:,j), Category(j), IAdjustDummy, Total_Threshold(0:10,2,j), Total_MB_A(:,:,j), Ierror1)
-end do
-
-
-         ! Step 4.2, compute gamma and omega
+         ! Step 4.1, compute gamma and omega
 
 allocate (Total_Gamma(nmaxc,nmaxc,nvar*(nvar-1)/2), Total_Omega(nvar*(nvar-1)/2), Total_Error(nvar*(nvar-1)/2))
 
@@ -1392,9 +1316,9 @@ IAdjustDummy = IAdjustIn
 do ij = 1, nvar*(nvar-1)/2
 !
 
-call SubMakeGamma(Category(IJ_Index(1,ij)), Category(IJ_Index(2,ij)), IAdjustDummy, Total_Error(ij), &
-Total_Threshold(:,:,IJ_Index(1,ij)),Total_Threshold(:,:,IJ_Index(2,ij)), Total_MB_NA(:,:,i), &
-Total_MB_NA(:,:,j), Total_MB_A(:,:,i), Total_MB_A(:,:,j), Total_CellProbability(:,:,ij),&
+call SubMakeGamma(Category(IJ_Index(1,ij)), Category(IJ_Index(2,ij)), &
+Total_Threshold(:,:,IJ_Index(1,ij)),Total_Threshold(:,:,IJ_Index(2,ij)), &
+Total_CellProbability(:,:,ij), Total_Table(:,:,ij), &
 Total_CellDerivative(:,:,ij), Total_Correlation(2,ij), Total_information(ij), Total_Gamma(:,:,ij), &
 Total_Omega(ij))
 
@@ -1433,7 +1357,7 @@ call SubComputeACM(Ncase, DataMatrixOut(1:Ncase, IJ_Index(1,IJKL_index(1,i))), &
     DataMatrixOut(1:Ncase, IJ_Index(1,IJKL_index(2,i))),&
     DataMatrixOut(1:Ncase, IJ_Index(2,IJKL_index(2,i))),&
     Total_Gamma(:,:,IJKL_index(1,i)), Total_Gamma(:,:,IJKL_index(2,i)),&
-    Total_Omega(IJKL_index(1,i)), Total_Omega(IJKL_index(1,2)),ACM1d(i))
+    Total_Omega(IJKL_index(1,i)), Total_Omega(IJKL_index(2,i)),ACM1d(i)) ! found a bug in 2020-07-24, GZ
 
 end do
 
@@ -1448,7 +1372,7 @@ end do
             deallocate (Total_xContingency, Total_CellProbability,Total_CellDerivative, Total_Correlation,&
                         Total_information)
 
-            deallocate (Total_MB_NA,Total_MB_A)
+      !      deallocate (Total_MB_NA,Total_MB_A)
             deallocate (Total_Gamma, Total_Omega, Total_Error)
             deallocate (IJKL_index)
 
