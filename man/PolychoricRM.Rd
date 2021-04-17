@@ -13,7 +13,7 @@ PolychoricRM(iRaw=NULL, IAdjust=0, NCore=2, estimate.acm=FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{iRaw}{The raw data: a n by p matrix where n is the number of participants and p is the number of manifest variables. Since the data are ordinal variables, all the element of the matrix are integers. In addition, the function deals with ordinal variables with 10 or fewer categories.}
-  \item{IMissing}{Options for handling missing data: 1 pairwise deletion (default), }
+  \item{IMissing}{Options for handling missing data: 1 pairwise deletion (default), 2 casewise deletion}
   \item{IAdjust}{Methods to adjust for empty cells: a scalar where 0 is no adjustment is done (default), 1  adds 1/(nc*nr) to all cells where nc and nr is the number of columns and rows of the contingency table respectively, 2 adds 0.1 to all cells, 3 adds 0.5 to all cells, 11 adds 1/(nc*nr) to only zero cells, 12 adds 0.1 to only zero cells, and 13 adds 0.5 to only zero cells
   }
   \item{NCore}{Number of threads to be utilized: a scalar specified by the researcher; default (2)}
@@ -65,7 +65,7 @@ We compute the ACM of polychoric correlations according to the method described 
 
 \item{correlation}{The p by p polychoric correlation matrix. Unlike a Pearson correlation matrix, the polychoric correlation matrix may or may not be positive definite. }
 
-\item{flag}{A 2 by p(p-1)/2 matrix of integers. This matrix provides additional information on estimating the polychoric correlations from the contingency table. The first row indicates whether the contingency table contains an empty cell (0 indicates no empty cells and 1 indicates at least one empty cell) and the second row indicates the number of iterations it took to converge}
+\item{flag}{A 3 by p(p-1)/2 matrix of integers. This matrix provides additional information on estimating the polychoric correlations from the contingency table. The first row indicates whether the contingency table contains an empty cell (0 indicates no empty cells and 1 indicates at least one empty cell). The second row indicates the number of iterations it took to converge. The third row indicates the number of cases in the contingency table.}
 
 \item{ACM}{A p(p-1)/2 by p(p-1)/2 symmetric matrix. Computing the matrix is more expensive than estimating the polychoric correlation matrix. Therefore, the output is an optional one and it is only computed upon request. Note the p(p-1)/2 non-duplicated polychoric correlations are arranged in the following way r_12, r_13, r_23, r_14, r_24, ..., r_(p-2)p, r_(p-1)p}
 
