@@ -13,6 +13,7 @@ PolychoricRM(iRaw=NULL, IAdjust=0, NCore=2, estimate.acm=FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{iRaw}{The raw data: a n by p matrix where n is the number of participants and p is the number of manifest variables. Since the data are ordinal variables, all the element of the matrix are integers. In addition, the function deals with ordinal variables with 10 or fewer categories.}
+  \item{IMissing}{Options for handling missing data: 1 pairwise deletion (default), }
   \item{IAdjust}{Methods to adjust for empty cells: a scalar where 0 is no adjustment is done (default), 1  adds 1/(nc*nr) to all cells where nc and nr is the number of columns and rows of the contingency table respectively, 2 adds 0.1 to all cells, 3 adds 0.5 to all cells, 11 adds 1/(nc*nr) to only zero cells, 12 adds 0.1 to only zero cells, and 13 adds 0.5 to only zero cells
   }
   \item{NCore}{Number of threads to be utilized: a scalar specified by the researcher; default (2)}
