@@ -529,7 +529,12 @@ module MODpolyACM
 
 contains
 
-  subroutine SUBPreprocessing (nvar,DataMatrixIn,DataMatrixOut,Category,T_NCount,IError)
+  subroutine SUBPreprocessing (nvar,DataMatrixIn,CompleteLog,DataMatrixOut,Category,T_NCount,IError)
+! 2021-03-12, Friday! Guangjian Zhang
+! Adding the missing data facility.
+! Adding a new input argument CompleteLog
+
+
 ! 2020-05-30, Saturday! Guangjian Zhang
 ! SUBPreprocessing cleans up data first.
 ! It will find out the real numbers of categories for each variables and remove unnecessary categories.
@@ -537,6 +542,7 @@ contains
   implicit none
   INTEGER, INTENT(IN) ::  nvar
   INTEGER,INTENT(IN) :: DataMatrixIn(:,:)
+  logical, intent(in) :: CompleteLog(:,:)
   INTEGER,INTENT(OUT) :: DataMatrixOut(:,:)
   INTEGER,DIMENSION(:),INTENT(OUT) :: Category
   Integer, DIMENSION(1:10,nvar), INTENT(OUT) :: T_NCount
@@ -551,10 +557,10 @@ contains
   T_NCount=0
   DataMatrixOut = DataMatrixIn
 
-
+! Changes needed to handle missing data whenever an operation involves participants
     DO j = 1, nvar
-    IMin = MINVAL(datamatrixIn(:,j))
-    Category(j) = MAXVAL(datamatrixIn(:,j))  - IMin + 1
+    IMin = MINVAL(datamatrixIn(:,j),CompleteLog(:,j))
+    Category(j) = MAXVAL(datamatrixIn(:,j),CompleteLog(:,j))  - IMin + 1
     if (Category(j)==1) IError(j) = -1 ! zero variation
     if (Category(j)> 9) IError(j) = -10 ! More than 10 categories
     DataMatrixOut(:,j) = DataMatrixIn(:,j) - IMin + 1
@@ -572,7 +578,7 @@ contains
     DO j = 1, nvar
         Ncount = 0
        do i = 1, nCase
-         Ncount(DataMatrixOut(i,j)) = Ncount(DataMatrixOut(i,j)) + 1
+        if(Completelog(i,j)) Ncount(DataMatrixOut(i,j)) = Ncount(DataMatrixOut(i,j)) + 1
        end do
 
        if (all(Ncount(1:Category(j))>0)) then
@@ -589,7 +595,7 @@ contains
           kreal = kreal+1
           T_NCount(kreal,j) = NCount(k)
         else
-          where (DataMatrixOut(:,j) > kreal) DataMatrixOut(:,j) = DataMatrixOut(:,j) - 1
+          where ((DataMatrixOut(:,j) > kreal).and.(Completelog(:,j))) DataMatrixOut(:,j) = DataMatrixOut(:,j) - 1
         end if
 
        end do
@@ -646,9 +652,13 @@ contains
   end subroutine Threshold1D
 
 
-  subroutine Make1Contingency(VariableI,VariableJ,Contingency)
+  subroutine Make1Contingency(VariableI,VariableJ,CompleteI,CompleteJ,Contingency)
+! Changes needed to accommodate Missing Data
+! Add two new variables CompleteI and CompleteJ
+! Whether a data point is missing
     implicit none
     INTEGER,INTENT(in)::VariableI(:),VariableJ(:)
+    logical,intent(in):: CompleteI(:), CompleteJ(:)
     INTEGER,INTENT(out)::Contingency(:,:)
 
     integer:: Ncase
@@ -660,18 +670,21 @@ contains
     Contingency = 0
 
     do l = 1, Ncase
-       Contingency(VariableI(l),VariableJ(l)) = Contingency(VariableI(l),VariableJ(l)) + 1
+       if ((CompleteI(l)).and.(CompleteJ(l))) Contingency(VariableI(l),VariableJ(l)) = Contingency(VariableI(l),VariableJ(l)) + 1
     end do
 
 
   end subroutine Make1Contingency
 
 !-------------------------------------------------------
-subroutine Estimate1Correlation (Contingency, CategoryI, CategoryJ, IAdjust, ThresholdI2, ThresholdJ2, xContingency, &
+subroutine Estimate1Correlation (Contingency, CategoryI, CategoryJ, IAdjust, CompleteIJ, ThresholdI2, ThresholdJ2, xContingency, &
             CellProbability, CellDerivative, Correlation, information,Ierror)
     use MODNormal, only: PPND16
 
+
+! recompute thresholds when missing data are present
 ! more options of dealing with empty cells
+
 
 
     implicit none
@@ -680,6 +693,7 @@ subroutine Estimate1Correlation (Contingency, CategoryI, CategoryJ, IAdjust, Thr
 
     Integer, dimension(:,:), intent(in) :: Contingency
     Integer, intent(in) :: CategoryI, CategoryJ, IAdjust
+    logical, intent(in) :: CompleteIJ
     real(dp), dimension(0:10,2), intent(in) :: ThresholdI2, ThresholdJ2
     real(dp), dimension(:,:), intent(out) :: xContingency, CellProbability, CellDerivative
     real(dp), dimension(2), intent(out) :: Correlation
@@ -697,7 +711,7 @@ subroutine Estimate1Correlation (Contingency, CategoryI, CategoryJ, IAdjust, Thr
     Ierror = 0
 
 
-    xcase = dble(sum(Contingency))
+    xcase = dble(sum(Contingency)) ! changes needed to accommodate missing data ??
     xContingency = dble (Contingency)
 
 
@@ -717,18 +731,28 @@ if (any(Contingency(1:CategoryI,1:CategoryJ)==0)) then
     select case (IAdjust)
 
     case (0)
-
+! modified needed to accommodate missing value
+   if (completeIJ) then
     ThresholdI(0:10) = ThresholdI2(0:10,1)
     ThresholdJ(0:10) = ThresholdJ2(0:10,1)
+    else
+     call ComputeThresholdIJ
+   end if
 
     case (1)
+! modified needed to accommodate missing values
+
 
     xContingency(1:CategoryI,1:CategoryJ) = xContingency(1:CategoryI,1:CategoryJ) + 1.0d0 / dble(CategoryI * CategoryJ)
-
     Ierror(1) = 1
     xcase = xcase + 1.0d0
+
+    if (completeIJ) then
     ThresholdI(0:10) = ThresholdI2(0:10,2)
     ThresholdJ(0:10) = ThresholdJ2(0:10,2)
+        else
+     call ComputeThresholdIJ
+   end if
 
     case (2)
 
@@ -779,8 +803,15 @@ if (any(Contingency(1:CategoryI,1:CategoryJ)==0)) then
     end select
 
     else
+
+   ! changes needed to accommodate missing data
+   if (CompleteIJ) then
     ThresholdI(0:10) = ThresholdI2(0:10,1)
     ThresholdJ(0:10) = ThresholdJ2(0:10,1)
+    else
+     call ComputeThresholdIJ
+     end if
+
 end if
 
     xTable = xContingency(1:CategoryI,1:CategoryJ)
@@ -814,11 +845,14 @@ Correlation(2) = xtemp
 information =  - xscore ! possible error? 2020-07-12
 Ierror(2) = i
 
+
+! write (3, fmt='(3i15)') IError
+
 contains
 !-------------------------------
 subroutine ComputeThresholdIJ
     integer :: i,j,DummyError
-    real(dp):: xtemp, xtemp1d(10)
+    real(dp):: xtemp, xtemp1dI(10), xtemp1dJ(10)
 
 
      ThresholdI(0) = -1.0d10
@@ -826,27 +860,52 @@ subroutine ComputeThresholdIJ
      ThresholdI(CategoryI) = 1.0d10
      ThresholdJ(CategoryJ) = 1.0d10
 
-    xtemp=0.0d0
-    xtemp1d = 0.0d0
-    xtemp1d(1:CategoryI) = sum(xContingency(1:CategoryI,1:CategoryJ), dim=2) /xcase
+    xtemp1dI = 0.0d0
+    xtemp1dJ = 0.0d0
 
+    xtemp1dI(1:CategoryI) = sum(xContingency(1:CategoryI,1:CategoryJ), dim=2) /xcase
+    xtemp1dJ(1:CategoryJ) = sum(xContingency(1:CategoryI,1:CategoryJ), dim = 1) /xcase
+
+    if ((any(xtemp1dI(1:CategoryI)<1.0D-10)).or.(any(xtemp1dJ(1:CategoryJ)<1.0D-10))) then
+
+    xContingency(1:CategoryI,1:CategoryJ) = xContingency(1:CategoryI,1:CategoryJ) + 1.0d0 / dble(CategoryI * CategoryJ)
+
+    Ierror(1) = 1
+    xcase = xcase + 1.0d0
+
+    xtemp1dI = 0.0d0
+    xtemp1dJ = 0.0d0
+
+    xtemp1dI(1:CategoryI) = sum(xContingency(1:CategoryI,1:CategoryJ), dim=2) /xcase
+    xtemp1dJ(1:CategoryJ) = sum(xContingency(1:CategoryI,1:CategoryJ), dim = 1) /xcase
+
+    end if
+
+! changes needed to accommodate missing data, how about we do both xtemp1dI and xtemp1dJ
+! And then we could make the changes.
+
+    xtemp=0.0d0
 
     do i = 1, CategoryI - 1
-      xtemp = xtemp + xtemp1d(i)
+      xtemp = xtemp + xtemp1dI(i)
       ThresholdI(i)=ppnd16(xtemp,DummyError)
     end do
 
 
 
     xtemp=0.0d0
-    xtemp1d = 0.0d0
-    xtemp1d(1:CategoryJ) = sum(xContingency(1:CategoryI,1:CategoryJ), dim = 1) /xcase
+!    xtemp1d = 0.0d0
+!    xtemp1d(1:CategoryJ) = sum(xContingency(1:CategoryI,1:CategoryJ), dim = 1) /xcase
+
+! changes needed to accommodate missing data
 
 
     do j = 1, CategoryJ - 1
-      xtemp = xtemp + xtemp1d(j)
+      xtemp = xtemp + xtemp1dJ(j)
       ThresholdJ(j)=ppnd16(xtemp,DummyError)
     end do
+
+
 
 end subroutine ComputeThresholdIJ
 
@@ -1150,7 +1209,9 @@ end subroutine SubComputeACM
 !-----------------------------------------------------------------------------------------
 
 
-subroutine SubEstimatePolyACM (Ncase, nvar, IAdjustIn, NCore, DataIn, ThresholdOut, PolyR,IError, ACM1d)
+subroutine SubEstimatePolyACM (Ncase, nvar, IMissing,IAdjustIn, NCore, DataIn, ThresholdOut, PolyR,IError, ACM1d)
+! 2021-03-12, Friday! Guangjian Zhang
+! Adding the facility of handling missing data
 
     use omp_lib
 
@@ -1159,11 +1220,11 @@ subroutine SubEstimatePolyACM (Ncase, nvar, IAdjustIn, NCore, DataIn, ThresholdO
     INTEGER, PARAMETER  :: dp = SELECTED_REAL_KIND(12, 60)
 
 
-    integer, intent(in) :: Ncase, nvar, IAdjustIn, NCore
+    integer, intent(in) :: Ncase, nvar, IMissing, IAdjustIn, NCore
     integer, dimension(Ncase, nvar),intent(in):: DataIn
     real(dp), dimension(0:10,nvar), intent(out) :: ThresholdOut
     real(dp), dimension(nvar*(nvar-1)/2), intent(out) :: PolyR
-    integer, dimension(2,nvar*(nvar-1)/2), intent(out) :: IError
+    integer, dimension(3,nvar*(nvar-1)/2), intent(out) :: IError
     real(dp), dimension((nvar*(nvar-1))*(nvar*(nvar-1)+2)/8), intent(out), optional :: ACM1D
 
 
@@ -1174,9 +1235,16 @@ subroutine SubEstimatePolyACM (Ncase, nvar, IAdjustIn, NCore, DataIn, ThresholdO
 
     integer, allocatable :: Total_Table (:,:,:), Table_Temp(:,:), DataMatrixIn(:,:), DataMatrixOut(:,:), &
                             Category(:), T_Ncount(:,:), IJ_Index(:,:), Total_Error(:), IJKL_index(:,:), &
-                            IError1d(:)
-    integer ::  IerrorTh(10,2),nmaxc, IAdjustDummy, NCoreDummy
+                            IError1d(:), IntegerTemp1(:,:), IntegerTemp2(:,:)
+
+            logical ::  CompleteVar(nvar), CompleteIJ, CompleteAll
+            logical, allocatable :: CompleteLog(:, :), CompleteLogt(:,:)
+
+    integer ::  IerrorTh(10,2),nmaxc, IAdjustDummy, NCoreDummy, NComplete
     integer:: i,j,ij,kl, ijkl
+
+
+    Ierror = 0
 
     ! Step 0, take care of local variables
     ! mthread = omp_get_max_threads()
@@ -1190,17 +1258,71 @@ subroutine SubEstimatePolyACM (Ncase, nvar, IAdjustIn, NCore, DataIn, ThresholdO
 
 
 
-allocate (DataMatrixIn(ncase,nvar), DataMatrixOut(ncase,nvar), Category(nvar), IError1d(nvar), &
+
+     ! missing data are indicated by -999
+     allocate (CompleteLog(Ncase,nvar), CompleteLogt(nvar,Ncase))
+
+     CompleteLog = .TRUE.
+     where(DataIn == -999) CompleteLog = .FALSE.
+
+     CompleteAll = .FALSE.
+     if (all(CompleteLog)) CompleteAll = .TRUE.
+
+    if (CompleteAll) then
+          CompleteVar = .TRUE.
+          NComplete = Ncase
+        else ! When there are missing data.
+
+          if (IMissing==1) then ! Pairwise deletion
+             Ncomplete = Ncase
+             CompleteVar = .FALSE.
+          do j = 1, nvar
+            if(all(CompleteLog(:,j))) CompleteVar(j) = .TRUE.
+          end do
+
+            else ! Casewise deletion
+
+              allocate(IntegerTemp1(nvar,ncase),IntegerTemp2(nvar,ncase))
+                CompleteVar = .TRUE.
+                IntegerTemp1 = transpose(DataIn)
+                IntegerTemp2=0
+                CompleteLogt = transpose(CompleteLog)
+                NComplete = 0
+                  do j = 1, Ncase
+                     if(all(CompleteLogt(:,j))) then
+                        NComplete = NComplete + 1
+                        IntegerTemp2(:,NComplete) = IntegerTemp1(:,j)
+                      end if
+                  end do
+
+                  deallocate(CompleteLog, CompleteLogt)
+                  allocate (CompleteLog(NComplete,nvar))
+                  CompleteLog = .TRUE.
+
+
+          end if
+
+
+    end if
+
+
+allocate (DataMatrixIn(NComplete,nvar), DataMatrixOut(NComplete,nvar), Category(nvar), IError1d(nvar), &
           T_Ncount(10,nvar),Total_Threshold(0:10,2,nvar))
 
+if ((.not.CompleteAll).and.(IMissing==2)) then
+     DataMatrixIn = transpose(IntegerTemp2(1:nvar,1:NComplete))
+     deallocate(IntegerTemp1,IntegerTemp2)
+    else
      DataMatrixIn = DataIn
+end if
 
+if (IMissing==2) CompleteAll = .TRUE.
 
-
+! 2021-03-12, Friday! Making an array of CompleteLog complete data.
 
     ! Step 1, Pre-processing the matrix of integers
 
-    call SUBPreprocessing (nvar,DataMatrixIn,DataMatrixOut,Category,T_NCount,IError1d)
+    call SUBPreprocessing (nvar,DataMatrixIn,CompleteLog,DataMatrixOut,Category,T_NCount,IError1d) ! Change needed to accommodate missing values
 
     if (any(IError1d /= 0)) then
        Ierror(1,1:nvar) = IError1d(1:nvar)
@@ -1215,7 +1337,8 @@ allocate (DataMatrixIn(ncase,nvar), DataMatrixOut(ncase,nvar), Category(nvar), I
  !  !$omp parallel do
 
      do j = 1, nvar
-       call Threshold1D(T_NCount(:,j), NCase, Category(j), Total_Threshold(0:10,1:2, j), IerrorTh)
+       !call Threshold1D(T_NCount(:,j), NCase, Category(j), Total_Threshold(0:10,1:2, j), IerrorTh) ! changes needed to accommodate missing data
+       call Threshold1D(T_NCount(:,j), count(Completelog(:,j)), Category(j), Total_Threshold(0:10,1:2, j), IerrorTh)
      end do
 ! !$omp end parallel do
 
@@ -1244,11 +1367,19 @@ end do
 
 
 do ij = 1, nvar*(nvar-1)/2
-    call Make1Contingency(DataMatrixOut(:,IJ_Index(1,ij)),DataMatrixOut(:,IJ_Index(2,ij)),Table_Temp)
+    call Make1Contingency (DataMatrixOut(:,IJ_Index(1,ij)), DataMatrixOut(:,IJ_Index(2,ij)), &
+     CompleteLog(:,IJ_Index(1,ij)),  CompleteLog(:,IJ_Index(2,ij)), Table_Temp) ! changes needed to accommodate missing data
     Total_Table(:,:,ij) = Table_Temp
+    Ierror(3,ij) = sum(Table_Temp)
 end do
 
 ! !$omp end parallel do
+
+    if (any(Ierror(3,:) < 2 )) then
+       PolyR = 0.0d0
+       return
+    end if
+
 
 
          ! Step 3.2 Estimate polychoric correlations
@@ -1271,11 +1402,11 @@ IAdjustDummy = IAdjustIn
 
  do ij = 1, nvar*(nvar-1)/2
 !   ij = 302
-
-    call Estimate1Correlation (Total_Table(:,:,ij), Category(IJ_Index(1,ij)), Category(IJ_Index(2,ij)), IAdjustDummy,&
+    CompleteIJ = CompleteVar(IJ_Index(1,ij)) .and. CompleteVar(IJ_Index(2,ij))
+    call Estimate1Correlation (Total_Table(:,:,ij), Category(IJ_Index(1,ij)), Category(IJ_Index(2,ij)), IAdjustDummy, CompleteIJ, &
     Total_Threshold(:,:,IJ_Index(1,ij)), Total_Threshold(:,:,IJ_Index(2,ij)), &
     Total_xContingency(:,:,ij), Total_CellProbability(:,:,ij),Total_CellDerivative(:,:,ij), &
-    Total_Correlation(:,ij), Total_information(ij), IError(:,ij))
+    Total_Correlation(:,ij), Total_information(ij), IError(1:2,ij))
 
  end do
 
@@ -1294,9 +1425,9 @@ IAdjustDummy = IAdjustIn
             PolyR(1:nvar*(nvar-1)/2) =  CorrelationT(1:nvar*(nvar-1)/2,2)
 
 
-        if (.not.present(ACM1d)) then
+        if ((.not.present(ACM1d)).or.(.not.(CompleteAll))) then
 
-            deallocate (DataMatrixIn, DataMatrixOut, Category, IError1d,T_Ncount,Total_Threshold)
+            deallocate (DataMatrixIn, DataMatrixOut, Category, IError1d,T_Ncount,Total_Threshold,CompleteLog)
             deallocate (IJ_Index, Total_Table,Table_Temp)
             deallocate (Total_xContingency, Total_CellProbability,Total_CellDerivative, Total_Correlation,&
                         Total_information, CorrelationT)
@@ -1352,10 +1483,10 @@ end do
 
 do i = 1, nvar*(nvar-1)*(nvar*(nvar-1)+2)/8
 
-call SubComputeACM(Ncase, DataMatrixOut(1:Ncase, IJ_Index(1,IJKL_index(1,i))), &
-    DataMatrixOut(1:Ncase, IJ_Index(2,IJKL_index(1,i))),&
-    DataMatrixOut(1:Ncase, IJ_Index(1,IJKL_index(2,i))),&
-    DataMatrixOut(1:Ncase, IJ_Index(2,IJKL_index(2,i))),&
+call SubComputeACM(NComplete, DataMatrixOut(1:NComplete, IJ_Index(1,IJKL_index(1,i))), &
+    DataMatrixOut(1:NComplete, IJ_Index(2,IJKL_index(1,i))),&
+    DataMatrixOut(1:NComplete, IJ_Index(1,IJKL_index(2,i))),&
+    DataMatrixOut(1:NComplete, IJ_Index(2,IJKL_index(2,i))),&
     Total_Gamma(:,:,IJKL_index(1,i)), Total_Gamma(:,:,IJKL_index(2,i)),&
     Total_Omega(IJKL_index(1,i)), Total_Omega(IJKL_index(2,i)),ACM1d(i)) ! found a bug in 2020-07-24, GZ
 
@@ -1367,10 +1498,10 @@ end do
     ! Step 5, deallocate arrays
 
 
-            deallocate (DataMatrixIn, DataMatrixOut, Category, IError1D,T_Ncount,Total_Threshold)
+            deallocate (DataMatrixIn, DataMatrixOut, Category, IError1D,T_Ncount,Total_Threshold,CompleteLog)
             deallocate (IJ_Index, Total_Table,Table_Temp)
             deallocate (Total_xContingency, Total_CellProbability,Total_CellDerivative, Total_Correlation,&
-                        Total_information)
+                        Total_information, CorrelationT)
 
       !      deallocate (Total_MB_NA,Total_MB_A)
             deallocate (Total_Gamma, Total_Omega, Total_Error)
@@ -1386,6 +1517,10 @@ end module MODpolyACM
 !-------------------------------------------------------------------------------------
 
 module ModPolyEnvelop
+! 2021-03-22, Monday!
+! Guangjian Zhang updated the files to add two missing data methods: pairwise deletion and casewise deletion.
+! A new input argument IMissing is added and the flag variable IError now contains three elements (1) adjustment made to
+! empty cells (2) iterations of Fisher scoring method (3) the number of complete case in a contingency table.
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1395,19 +1530,20 @@ module ModPolyEnvelop
 contains
 
 !-------------------------------------------------------------------------------------
-    subroutine polyACM_f(ncase, nvar, IAdjust, NCore, iRaw,  xThreshold, xPoly, IError, xACM) bind(C, name = "polyACM_f_")
+    subroutine polyACM_f(ncase, nvar, IMissing, IAdjust, NCore, iRaw,  xThreshold, xPoly, IError, xACM) bind(C, name = "polyACM_f_")
 
  use MODpolyACM, only: SubEstimatePolyACM
 
 
         integer(kind = c_int), intent(in)        :: ncase    ! The # of participants
         integer(kind = c_int), intent(in)        :: nvar    ! # of variables,
+        integer(kind = c_int), intent(in)        :: IMissing   ! 1: pairwise deletion 2: casewise delettion
         integer(kind = c_int), intent(in)        :: IAdjust    ! whether to add a small constant to empty entries
         integer(kind = c_int), intent(in)        :: NCore    ! whether to add a small constant to empty entries
         integer(kind = c_int), intent(in), dimension(ncase,nvar)               :: iRaw ! Likert variables
         real(kind = c_double), intent(out), dimension(nvar,nvar) :: xPoly  ! polychoric correlations
         real(kind = c_double), intent(out), dimension(11,nvar) :: xThreshold  ! threshold estimates for each Likert variables
-        Integer(kind = c_int), intent(out),dimension(2,nvar*(nvar-1)/2)        :: iError   ! Errors for each contingency tables
+        Integer(kind = c_int), intent(out),dimension(3,nvar*(nvar-1)/2)        :: iError   ! Errors for each contingency tables
         real(kind = c_double), intent(out), dimension(nvar*(nvar-1)/2,nvar*(nvar-1)/2) :: xACM  ! polychoric correlations
 
 
@@ -1418,7 +1554,7 @@ contains
         integer:: i,j, ij
 
 
-        call SubEstimatePolyACM (Ncase, nvar, IAdjust, NCore, IRaw, xThreshold, Correlation1D,IError,ACM1D)
+        call SubEstimatePolyACM (Ncase, nvar, IMissing, IAdjust, NCore, IRaw, xThreshold, Correlation1D,IError,ACM1D)
 
           xPoly = 0.0d0
           ij=0
@@ -1452,19 +1588,20 @@ contains
 !--------------------------------------------------------------------------------------------
 
 !-------------------------------------------------------------------------------------
-    subroutine polyR_f(ncase, nvar, IAdjust, NCore, iRaw,  xThreshold, xPoly, IError) bind(C, name = "polyR_f_")
+    subroutine polyR_f(ncase, nvar, IMissing, IAdjust, NCore, iRaw,  xThreshold, xPoly, IError) bind(C, name = "polyR_f_")
 
  use MODpolyACM, only: SubEstimatePolyACM
 
 
         integer(kind = c_int), intent(in)        :: ncase    ! The # of participants
         integer(kind = c_int), intent(in)        :: nvar    ! # of variables,
+        integer(kind = c_int), intent(in)        :: IMissing   ! 1: pairwise deletion 2: casewise delettion
         integer(kind = c_int), intent(in)        :: IAdjust    ! whether to add a small constant to empty entries
         integer(kind = c_int), intent(in)        :: NCore    ! whether to add a small constant to empty entries
         integer(kind = c_int), intent(in), dimension(ncase,nvar)               :: iRaw ! Likert variables
         real(kind = c_double), intent(out), dimension(nvar,nvar) :: xPoly  ! polychoric correlations
         real(kind = c_double), intent(out), dimension(11,nvar) :: xThreshold  ! threshold estimates for each Likert variables
-        Integer(kind = c_int), intent(out),dimension(2,nvar*(nvar-1)/2)        :: iError   ! Errors for each contingency tables
+        Integer(kind = c_int), intent(out),dimension(3,nvar*(nvar-1)/2)        :: iError   ! Errors for each contingency tables
 
 
 
@@ -1474,7 +1611,7 @@ contains
         integer:: i,j, ij
 
 
-        call SubEstimatePolyACM (Ncase, nvar, IAdjust, NCore, IRaw, xThreshold, Correlation1D,IError)
+        call SubEstimatePolyACM (Ncase, nvar, IMissing,IAdjust, NCore, IRaw, xThreshold, Correlation1D,IError)
 
           xPoly = 0.0d0
           ij=0

@@ -4,18 +4,18 @@
 #include <Rmath.h>
 #include <R_ext/Rdynload.h>
 
-void F77_NAME(polyACM_f) (int *ncase, int *nvar, int *IAdjust, int *NCore, int *iRaw, double*xThreshold, double *xPoly, int *IError, double *xACM);
+void F77_NAME(polyACM_f) (int *ncase, int *nvar, int *IMissing, int *IAdjust, int *NCore, int *iRaw, double*xThreshold, double *xPoly, int *IError, double *xACM);
 
-void F77_NAME(polyR_f) (int *ncase, int *nvar, int *IAdjust, int *NCore, int *iRaw, double*xThreshold, double *xPoly, int *IError);
+void F77_NAME(polyR_f) (int *ncase, int *nvar, int *IMissing, int *IAdjust, int *NCore, int *iRaw, double*xThreshold, double *xPoly, int *IError);
 
 
-  extern SEXP c_polyACM_f(SEXP ncase, SEXP nvar, SEXP IAdjust, SEXP NCore, SEXP iRaw){
+  extern SEXP c_polyACM_f(SEXP ncase, SEXP nvar, SEXP IMissing, SEXP IAdjust, SEXP NCore, SEXP iRaw){
 
    SEXP oxThreshold = PROTECT(allocMatrix(REALSXP, 11, asInteger(nvar)));
    SEXP oxPoly = PROTECT(allocMatrix(REALSXP, asInteger(nvar),asInteger(nvar)));
-   SEXP oIError = PROTECT(allocMatrix(INTSXP, 2, asInteger(nvar)*(asInteger(nvar)-1)/2));
+   SEXP oIError = PROTECT(allocMatrix(INTSXP, 3, asInteger(nvar)*(asInteger(nvar)-1)/2));
    SEXP oxACM = PROTECT(allocMatrix(REALSXP, asInteger(nvar)*(asInteger(nvar)-1)/2,asInteger(nvar)*(asInteger(nvar)-1)/2));
-   F77_CALL(polyACM_f) (INTEGER(ncase), INTEGER(nvar), INTEGER(IAdjust), INTEGER(NCore), INTEGER(iRaw), REAL(oxThreshold), REAL(oxPoly), INTEGER(oIError),REAL(oxACM));
+   F77_CALL(polyACM_f) (INTEGER(ncase), INTEGER(nvar), INTEGER(IMissing), INTEGER(IAdjust), INTEGER(NCore), INTEGER(iRaw), REAL(oxThreshold), REAL(oxPoly), INTEGER(oIError),REAL(oxACM));
    SEXP OS = PROTECT(allocVector(VECSXP, 4));
    SET_VECTOR_ELT(OS,0,oxThreshold);
    SET_VECTOR_ELT(OS,1,oxPoly);
@@ -26,12 +26,12 @@ void F77_NAME(polyR_f) (int *ncase, int *nvar, int *IAdjust, int *NCore, int *iR
  }
 
 
-   extern SEXP c_polyR_f(SEXP ncase, SEXP nvar, SEXP IAdjust, SEXP NCore, SEXP iRaw){
+   extern SEXP c_polyR_f(SEXP ncase, SEXP nvar, SEXP IMissing, SEXP IAdjust, SEXP NCore, SEXP iRaw){
 
    SEXP oxThreshold = PROTECT(allocMatrix(REALSXP, 11, asInteger(nvar)));
    SEXP oxPoly = PROTECT(allocMatrix(REALSXP, asInteger(nvar),asInteger(nvar)));
-   SEXP oIError = PROTECT(allocMatrix(INTSXP, 2, asInteger(nvar)*(asInteger(nvar)-1)/2));
-   F77_CALL(polyR_f) (INTEGER(ncase), INTEGER(nvar), INTEGER(IAdjust), INTEGER(NCore), INTEGER(iRaw), REAL(oxThreshold), REAL(oxPoly), INTEGER(oIError));
+   SEXP oIError = PROTECT(allocMatrix(INTSXP, 3, asInteger(nvar)*(asInteger(nvar)-1)/2));
+   F77_CALL(polyR_f) (INTEGER(ncase), INTEGER(nvar), INTEGER(IMissing), INTEGER(IAdjust), INTEGER(NCore), INTEGER(iRaw), REAL(oxThreshold), REAL(oxPoly), INTEGER(oIError));
    SEXP OS = PROTECT(allocVector(VECSXP, 3));
    SET_VECTOR_ELT(OS,0,oxThreshold);
    SET_VECTOR_ELT(OS,1,oxPoly);
@@ -42,8 +42,8 @@ void F77_NAME(polyR_f) (int *ncase, int *nvar, int *IAdjust, int *NCore, int *iR
 
 
  static const R_CallMethodDef CallEntries[] = {
-   {"c_polyACM_f",   (DL_FUNC) &c_polyACM_f,   5},
-   {"c_polyR_f",   (DL_FUNC) &c_polyR_f,   5},
+   {"c_polyACM_f",   (DL_FUNC) &c_polyACM_f,   6},
+   {"c_polyR_f",   (DL_FUNC) &c_polyR_f,   6},
    {NULL,         NULL,                0}
  };
 
